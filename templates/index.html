@@ -1,61 +1,54 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="row justify-content-center">
-	<div class="col-lg-8">
-		<div class="card shadow-sm border-0">
-			<div class="card-body p-4 p-md-5">
-				<h2 class="h4 mb-4">Run Scheduling Experiment</h2>
+<div class="d-flex justify-content-center align-items-start" style="min-height: calc(100vh - 150px);">
+	<div class="col-12 col-md-10 col-lg-8">
+		<div class="card shadow border-0 w-100 h-100">
+			<div class="card-body p-3 p-md-4 p-lg-5">
+				<h2 class="h3 mb-4 text-primary fw-bold">Run Scheduling Experiment</h2>
 
-				<form id="run-form" method="post" action="{{ url_for('main.run') }}" enctype="multipart/form-data">
-					<div class="mb-4">
-						<label for="dataset" class="form-label fw-semibold">Dataset Upload</label>
-						<input class="form-control" type="file" id="dataset" name="dataset" accept=".csv,.txt" required>
-						<div class="form-text">Supported formats: CSV and TXT.</div>
-					</div>
-
-					<div class="mb-4">
-						<label class="form-label fw-semibold d-block">Task Count (100-1000)</label>
-						<div class="row g-2">
-							<div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-100" value="100" checked><label class="form-check-label" for="tasks-100">100</label></div></div>
-							<div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-200" value="200"><label class="form-check-label" for="tasks-200">200</label></div></div>
-							<div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-300" value="300"><label class="form-check-label" for="tasks-300">300</label></div></div>
-							<div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-400" value="400"><label class="form-check-label" for="tasks-400">400</label></div></div>
-							<div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-500" value="500"><label class="form-check-label" for="tasks-500">500</label></div></div>
-							<div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-600" value="600"><label class="form-check-label" for="tasks-600">600</label></div></div>
-							<div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-700" value="700"><label class="form-check-label" for="tasks-700">700</label></div></div>
-							<div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-800" value="800"><label class="form-check-label" for="tasks-800">800</label></div></div>
-							<div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-900" value="900"><label class="form-check-label" for="tasks-900">900</label></div></div>
-							<div class="col-6 col-md-3"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-1000" value="1000"><label class="form-check-label" for="tasks-1000">1000</label></div></div>
+				<form id="run-form" class="w-100" method="post" action="{{ url_for('main.run') }}" enctype="multipart/form-data">
+					<div class="d-flex flex-column flex-lg-row w-100 justify-content-between gap-2 gap-lg-3 mb-3">
+						<div class="flex-fill">
+							<label for="dataset" class="form-label fw-semibold">Dataset Upload</label>
+							<input class="form-control" type="file" id="dataset" name="dataset" accept=".csv,.txt,.zip" required>
+							<div class="form-text">Supported formats: CSV, TXT, and ZIP (ZIP should contain a CSV or TXT file).</div>
 						</div>
-					</div>
 
-					<div class="mb-4">
-						<label for="custom-task-count" class="form-label fw-semibold">Custom Task Count</label>
-						<input type="number" class="form-control" id="custom-task-count" name="custom_task_count" min="1" max="100000" placeholder="Enter custom task count">
-						<div class="form-text">If provided, custom value overrides radio selection.</div>
-					</div>
+						<div class="flex-fill">
+							<label class="form-label fw-semibold d-block">Task Count</label>
+							<div class="d-flex flex-row flex-wrap gap-2 mb-2">
+								<div class="col-auto"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-100" value="100" checked><label class="form-check-label" for="tasks-100">100</label></div></div>
+								<div class="col-auto"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-300" value="300"><label class="form-check-label" for="tasks-300">300</label></div></div>
+								<div class="col-auto"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-500" value="500"><label class="form-check-label" for="tasks-500">500</label></div></div>
+								<div class="col-auto"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-700" value="700"><label class="form-check-label" for="tasks-700">700</label></div></div>
+								<div class="col-auto"><div class="form-check"><input class="form-check-input" type="radio" name="task_count_option" id="tasks-1000" value="1000"><label class="form-check-label" for="tasks-1000">1000</label></div></div>
+							</div>
+							<input type="number" class="form-control" id="custom-task-count" name="custom_task_count" min="1" max="100000" placeholder="Custom task count (overrides)" />
+						</div>
 
-					<div class="mb-4">
-						<label class="form-label fw-semibold d-block">Algorithms</label>
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox" value="fcfs" id="algo-fcfs" name="algorithms" checked>
+						<div class="flex-fill">
+							<label class="form-label fw-semibold d-block">Algorithms</label>
+							<div class="form-check">
+							<input class="form-check-input" type="checkbox" value="fcfs" id="algo-fcfs" name="algorithms">
 							<label class="form-check-label" for="algo-fcfs">FCFS</label>
 						</div>
 						<div class="form-check">
-							<input class="form-check-input" type="checkbox" value="sjf" id="algo-sjf" name="algorithms" checked>
+							<input class="form-check-input" type="checkbox" value="sjf" id="algo-sjf" name="algorithms">
 							<label class="form-check-label" for="algo-sjf">SJF</label>
 						</div>
 						<div class="form-check">
-							<input class="form-check-input" type="checkbox" value="eft" id="algo-eft" name="algorithms" checked>
-							<label class="form-check-label" for="algo-eft">EFT</label>
+							<input class="form-check-input" type="checkbox" value="eft" id="algo-eft" name="algorithms">
+								<label class="form-check-label" for="algo-eft">EFT</label>
+							</div>
 						</div>
 					</div>
 
 					<input type="hidden" id="task-count" name="task_count" value="100">
 
-					<div class="d-grid">
-						<button type="submit" class="btn btn-primary btn-lg">Run</button>
+					<div class="d-flex flex-column flex-sm-row w-100 justify-content-end gap-2">
+						<button type="button" id="cancel-btn" class="btn btn-secondary">Cancel</button>
+						<button type="submit" class="btn btn-primary">Run</button>
 					</div>
 				</form>
 			</div>
@@ -70,5 +63,16 @@
 		const effectiveTaskCount = custom ? custom : (selectedRadio ? selectedRadio.value : "100");
 		document.getElementById("task-count").value = effectiveTaskCount;
 	});
+
+	document.getElementById("cancel-btn").addEventListener("click", function () {
+		const form = document.getElementById("run-form");
+		form.reset();
+		// Clear file input explicitly
+		document.getElementById("dataset").value = "";
+		document.getElementById("task-count").value = "100";
+	});
 </script>
+		</div>
+	</div>
+</div>
 {% endblock %}
