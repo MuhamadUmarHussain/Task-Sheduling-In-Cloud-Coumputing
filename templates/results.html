@@ -13,28 +13,156 @@
 				{% if results is mapping and results.error %}
 					<div class="alert alert-danger mb-0" role="alert">{{ results.error }}</div>
 				{% elif results and results|length > 0 %}
+					<script id="chart-results-data" type="application/json">{{ chart_results|tojson }}</script>
 					<div class="table-responsive">
 						<table class="table table-striped align-middle">
 							<thead class="table-light">
 								<tr>
 									<th>Algorithm</th>
+									<th>No of Tasks</th>
 									<th>Makespan</th>
 									<th>Utilization</th>
 									<th>Throughput</th>
+									<th>Plot</th>
+									<th>CSV</th>
 								</tr>
 							</thead>
 							<tbody>
 								{% for row in results %}
 									<tr>
 										<td>{{ row.algorithm }}</td>
+										<td>{{ row.tasks }}</td>
 										<td>{{ "%.4f"|format(row.makespan) }}</td>
 										<td>{{ "%.4f"|format(row.utilization) }}</td>
 										<td>{{ "%.4f"|format(row.throughput) }}</td>
+										<td>
+											<button class="btn btn-sm btn-outline-primary view-plot-btn" type="button" data-bs-toggle="modal" data-bs-target="#plotModal" data-index="{{ loop.index0 }}" data-title="{{ row.algorithm }} n={{ row.tasks }}">View</button>
+										</td>
+										<td>
+											<a class="btn btn-sm btn-outline-success" href="{{ url_for('main.download_csv') }}?algorithm={{ row.algorithm }}&dataset={{ dataset_filename }}&task_count={{ row.tasks }}">Download</a>
+										</td>
 									</tr>
 								{% endfor %}
 							</tbody>
 						</table>
 					</div>
+
+					<!-- Plot Modal -->
+					<div class="modal fade" id="plotModal" tabindex="-1" aria-hidden="true">
+						<div class="modal-dialog modal-lg modal-dialog-centered">
+							<div class="modal-content">
+								<div class="modal-header">
+									<h5 class="modal-title" id="plotModalLabel">Plot</h5>
+									<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+								</div>
+								<div class="modal-body text-center">
+									<div style="position: relative; height: 420px;">
+										<canvas id="plotChart"></canvas>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+					<script>
+						window.addEventListener('load', function () {
+							const resultsData = JSON.parse(document.getElementById('chart-results-data').textContent);
+							const plotModalElement = document.getElementById('plotModal');
+							const plotModal = new bootstrap.Modal(plotModalElement);
+							const plotModalLabel = document.getElementById('plotModalLabel');
+							const datasetName = "{{ dataset_filename }}";
+							const plotCanvas = document.getElementById('plotChart');
+							let activeChart = null;
+							let pendingChart = null;
+
+							plotModalElement.addEventListener('hidden.bs.modal', () => {
+								if (activeChart) {
+									activeChart.destroy();
+									activeChart = null;
+								}
+								pendingChart = null;
+							});
+
+							plotModalElement.addEventListener('shown.bs.modal', () => {
+								if (!pendingChart) {
+									return;
+								}
+
+								const { labels, values, title, task_count } = pendingChart;
+								if (activeChart) {
+									activeChart.destroy();
+								}
+
+								// Fallback to server-side PNG if Chart.js failed to load
+								if (typeof Chart === 'undefined') {
+									const img = document.createElement('img');
+									img.className = 'img-fluid';
+									img.alt = title;
+									img.src = `/plot_modal?algorithm=${encodeURIComponent(title)}&dataset=${encodeURIComponent(datasetName)}&task_count=${encodeURIComponent(task_count || '')}`;
+									const container = plotCanvas.parentNode;
+									container.innerHTML = '';
+									container.appendChild(img);
+									return;
+								}
+
+								activeChart = new Chart(plotCanvas, {
+									type: 'bar',
+									data: {
+										labels: labels,
+										datasets: [{
+											label: 'Util.',
+											data: values,
+											backgroundColor: '#0d6efd',
+											borderColor: '#0d6efd',
+											borderWidth: 1,
+											borderRadius: 4,
+										}],
+									},
+									options: {
+										responsive: true,
+										maintainAspectRatio: false,
+										plugins: {
+											legend: { display: false },
+											title: { display: true, text: title },
+											tooltip: {
+												callbacks: {
+													label: (context) => `Util.: ${context.parsed.y.toFixed(4)}`,
+												},
+											},
+											},
+											scales: {
+												y: {
+													beginAtZero: true,
+													ticks: { maxTicksLimit: 6 },
+													max: 1,
+													title: { display: true, text: 'Util.' },
+												},
+												x: {
+													title: { display: true, text: 'VM' },
+												},
+											},
+										},
+									});
+							});
+
+							document.querySelectorAll('.view-plot-btn').forEach((btn) => {
+								btn.addEventListener('click', () => {
+									const resultIndex = Number(btn.dataset.index);
+									const resultRow = resultsData[resultIndex];
+									if (!resultRow || !resultRow.vm_data) {
+										return;
+									}
+
+									const labels = resultRow.vm_data.map((entry) => entry.name);
+									const values = resultRow.vm_data.map((entry) => entry.utilization);
+
+                                        									plotModalLabel.textContent = btn.dataset.title;
+																			pendingChart = { labels, values, title: btn.dataset.title, task_count: resultsData[resultIndex].tasks };
+								});
+							});
+						});
+					</script>
 				{% else %}
 					<div class="alert alert-warning mb-0" role="alert">No results available. Please run an experiment.</div>
 				{% endif %}

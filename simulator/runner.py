@@ -8,6 +8,20 @@ from simulator.scheduler_sjf import sjf_schedule
 from simulator.task_loader import load_tasks
 
 
+def _build_vm_data(vms: list) -> list[dict[str, float | str]]:
+	makespan = max((vm.available_time for vm in vms), default=0.0)
+	if makespan <= 0:
+		return [{"name": f"VM{vm.id}", "utilization": 0.0} for vm in vms]
+
+	return [
+		{
+			"name": f"VM{vm.id}",
+			"utilization": round(vm.available_time / makespan, 4),
+		}
+		for vm in vms
+	]
+
+
 def run_experiment(filepath: str, n_tasks: int, algorithms: list[str]) -> list[dict[str, float | str]]:
 	"""Run selected scheduling algorithms and return UI-ready result rows."""
 	if n_tasks <= 0:
@@ -33,7 +47,7 @@ def run_experiment(filepath: str, n_tasks: int, algorithms: list[str]) -> list[d
 		vms = create_datacenter()
 		finish_time = scheduler_fn(tasks, vms)
 		metrics = calculate_metrics(vms, total_tasks=len(tasks), finish_time=finish_time)
-		results.append({"algorithm": algorithm_name, **metrics})
+		results.append({"algorithm": algorithm_name, "tasks": len(tasks), "vm_data": _build_vm_data(vms), **metrics})
 
 	if not results:
 		raise ValueError("No valid algorithms selected.")
