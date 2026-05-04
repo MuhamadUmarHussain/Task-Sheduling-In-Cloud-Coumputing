@@ -18,7 +18,13 @@ def index() -> str:
 def run() -> str:
 	dataset_file = request.files.get("dataset")
 	task_count = request.form.get("task_count", type=int)
-	algorithms = request.form.getlist("algorithms")
+	# Accept multiple ways the form may send algorithms: as repeated
+	# `algorithms` fields or as `algorithms[]` (some clients/JS use that).
+	algorithms = request.form.getlist("algorithms") or request.form.getlist("algorithms[]")
+
+	# If a single comma-separated string was submitted, split it.
+	if algorithms and isinstance(algorithms, str):
+		algorithms = [a.strip() for a in algorithms.split(',') if a.strip()]
 
 	if dataset_file is None or dataset_file.filename == "":
 		return render_template(

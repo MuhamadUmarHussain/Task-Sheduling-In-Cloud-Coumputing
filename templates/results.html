@@ -36,10 +36,11 @@
 										<td>{{ "%.4f"|format(row.utilization) }}</td>
 										<td>{{ "%.4f"|format(row.throughput) }}</td>
 										<td>
-											<button class="btn btn-sm btn-outline-primary view-plot-btn" type="button" data-bs-toggle="modal" data-bs-target="#plotModal" data-index="{{ loop.index0 }}" data-title="{{ row.algorithm }} n={{ row.tasks }}">View</button>
+											{# Provide the algorithm key (lowercase) for server endpoints/fallbacks #}
+											<button class="btn btn-sm btn-outline-primary view-plot-btn" type="button" data-bs-toggle="modal" data-bs-target="#plotModal" data-index="{{ loop.index0 }}" data-title="{{ row.algorithm }} n={{ row.tasks }}" data-algorithm="{{ row.algorithm|lower }}">View</button>
 										</td>
 										<td>
-											<a class="btn btn-sm btn-outline-success" href="{{ url_for('main.download_csv') }}?algorithm={{ row.algorithm }}&dataset={{ dataset_filename }}&task_count={{ row.tasks }}">Download</a>
+											<a class="btn btn-sm btn-outline-success" href="{{ url_for('main.download_csv') }}?algorithm={{ row.algorithm|lower }}&dataset={{ dataset_filename }}&task_count={{ row.tasks }}">Download</a>
 										</td>
 									</tr>
 								{% endfor %}
@@ -89,17 +90,17 @@
 									return;
 								}
 
-								const { labels, values, title, task_count } = pendingChart;
+								const { labels, values, title, task_count, alg } = pendingChart;
 								if (activeChart) {
 									activeChart.destroy();
 								}
 
 								// Fallback to server-side PNG if Chart.js failed to load
-								if (typeof Chart === 'undefined') {
+										if (typeof Chart === 'undefined') {
 									const img = document.createElement('img');
 									img.className = 'img-fluid';
 									img.alt = title;
-									img.src = `/plot_modal?algorithm=${encodeURIComponent(title)}&dataset=${encodeURIComponent(datasetName)}&task_count=${encodeURIComponent(task_count || '')}`;
+											img.src = `/plot_modal?algorithm=${encodeURIComponent(alg || title)}&dataset=${encodeURIComponent(datasetName)}&task_count=${encodeURIComponent(task_count || '')}`;
 									const container = plotCanvas.parentNode;
 									container.innerHTML = '';
 									container.appendChild(img);
@@ -157,8 +158,8 @@
 									const labels = resultRow.vm_data.map((entry) => entry.name);
 									const values = resultRow.vm_data.map((entry) => entry.utilization);
 
-                                        									plotModalLabel.textContent = btn.dataset.title;
-																			pendingChart = { labels, values, title: btn.dataset.title, task_count: resultsData[resultIndex].tasks };
+																			    plotModalLabel.textContent = btn.dataset.title;
+																				    pendingChart = { labels, values, title: btn.dataset.title, task_count: resultsData[resultIndex].tasks, alg: btn.dataset.algorithm };
 								});
 							});
 						});
